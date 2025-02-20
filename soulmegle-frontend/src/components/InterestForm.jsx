@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import API_BASE_URL from "../config";
 
-const InterestForm = () => {
+const InterestForm = ({ setUserId }) => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -25,6 +25,9 @@ const InterestForm = () => {
       const data = await response.json();
       console.log("User added:", data);
       alert("User registered successfully!");
+
+      // Set the userId using the callback passed via props
+      setUserId(data.id);
     } catch (error) {
       console.error("Error saving user:", error);
     }
