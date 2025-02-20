@@ -1,21 +1,17 @@
 // src/components/InterestForm.jsx
 import React, { useState } from "react";
 import API_BASE_URL from "../config";
+import "./InterestForm.css";
 
 const InterestForm = ({ setUserId }) => {
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [hobbies, setHobbies] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({ name: "", age: "", gender: "", hobbies: "" });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const userData = { name, age, gender, hobbies };
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/users`, {
@@ -23,55 +19,42 @@ const InterestForm = ({ setUserId }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(formData),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save user.");
-      }
 
       const data = await response.json();
       console.log("User added:", data);
       alert("User registered successfully!");
-
       setUserId(data.id);
-      setName("");
-      setAge("");
-      setGender("");
-      setHobbies("");
     } catch (error) {
       console.error("Error saving user:", error);
-      setError("Failed to register. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>Name:</label>
-      <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+    <div className="form-container">
+      <h2>Tell Us About Yourself</h2>
+      <form onSubmit={handleSubmit}>
+        <label>Name</label>
+        <input type="text" name="name" value={formData.name} onChange={handleChange} required />
 
-      <label>Age:</label>
-      <input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
+        <label>Age</label>
+        <input type="number" name="age" value={formData.age} onChange={handleChange} required />
 
-      <label>Gender:</label>
-      <select value={gender} onChange={(e) => setGender(e.target.value)} required>
-        <option value="">Select</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
-      </select>
+        <label>Gender</label>
+        <select name="gender" value={formData.gender} onChange={handleChange} required>
+          <option value="">Select</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
 
-      <label>Hobbies:</label>
-      <input type="text" value={hobbies} onChange={(e) => setHobbies(e.target.value)} required />
+        <label>Hobbies</label>
+        <input type="text" name="hobbies" placeholder="e.g., reading, gaming, coding" value={formData.hobbies} onChange={handleChange} required />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <button type="submit" disabled={loading}>
-        {loading ? "Saving..." : "Save & Continue"}
-      </button>
-    </form>
+        <button type="submit" className="submit-button">Save & Continue</button>
+      </form>
+    </div>
   );
 };
 
