@@ -7,9 +7,13 @@ const InterestForm = ({ setUserId }) => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [hobbies, setHobbies] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError("");
 
     const userData = { name, age, gender, hobbies };
 
@@ -22,14 +26,24 @@ const InterestForm = ({ setUserId }) => {
         body: JSON.stringify(userData),
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to save user.");
+      }
+
       const data = await response.json();
       console.log("User added:", data);
       alert("User registered successfully!");
 
-      // Set the userId using the callback passed via props
       setUserId(data.id);
+      setName("");
+      setAge("");
+      setGender("");
+      setHobbies("");
     } catch (error) {
       console.error("Error saving user:", error);
+      setError("Failed to register. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,7 +66,11 @@ const InterestForm = ({ setUserId }) => {
       <label>Hobbies:</label>
       <input type="text" value={hobbies} onChange={(e) => setHobbies(e.target.value)} required />
 
-      <button type="submit">Save & Continue</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <button type="submit" disabled={loading}>
+        {loading ? "Saving..." : "Save & Continue"}
+      </button>
     </form>
   );
 };
