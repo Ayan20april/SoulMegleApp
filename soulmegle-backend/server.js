@@ -7,6 +7,11 @@ const { Server } = require('socket.io');
 const sequelize = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 
+
+const cors = require("cors");
+app.use(cors({ origin: "*" })); // Allow all domains (for development)
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());

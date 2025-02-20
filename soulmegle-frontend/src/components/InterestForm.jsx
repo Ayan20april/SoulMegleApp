@@ -1,79 +1,56 @@
 // src/components/InterestForm.jsx
-import React, { useState } from 'react';
-import './InterestForm.css';
+import React, { useState } from "react";
+import API_BASE_URL from "../config";
 
 const InterestForm = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    gender: '',
-    hobbies: ''
-  });
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [hobbies, setHobbies] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formData);
+    const userData = { name, age, gender, hobbies };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+      console.log("User added:", data);
+      alert("User registered successfully!");
+    } catch (error) {
+      console.error("Error saving user:", error);
+    }
   };
 
   return (
-    <div className="container">
-      <h2 className="form-heading">Tell Us About Yourself</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Your name"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="age">Age</label>
-          <input
-            type="number"
-            name="age"
-            id="age"
-            value={formData.age}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="gender">Gender</label>
-          <select
-            name="gender"
-            id="gender"
-            value={formData.gender}
-            onChange={handleChange}
-          >
-            <option value="">Select</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non-binary">Non-Binary</option>
-          </select>
-        </div>
-        <div className="form-group">
-          <label htmlFor="hobbies">Hobbies</label>
-          <input
-            type="text"
-            name="hobbies"
-            id="hobbies"
-            value={formData.hobbies}
-            onChange={handleChange}
-            placeholder="e.g., reading, gaming, coding"
-          />
-        </div>
-        <button type="submit" className="button">
-          Save &amp; Continue
-        </button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <label>Name:</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+
+      <label>Age:</label>
+      <input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
+
+      <label>Gender:</label>
+      <select value={gender} onChange={(e) => setGender(e.target.value)} required>
+        <option value="">Select</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label>Hobbies:</label>
+      <input type="text" value={hobbies} onChange={(e) => setHobbies(e.target.value)} required />
+
+      <button type="submit">Save & Continue</button>
+    </form>
   );
 };
 
