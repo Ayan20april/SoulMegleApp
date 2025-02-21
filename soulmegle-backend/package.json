@@ -16,7 +16,6 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-fetch": "^3.3.2",
-    "openai": "^4.85.2",
     "pg": "^8.13.3",
     "pg-hstore": "^2.3.4",
     "pgvector": "^0.2.0",

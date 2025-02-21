@@ -1,66 +1,65 @@
-const express = require('express');
+const express = require("express");
+const { spawn } = require("child_process");
 const router = express.Router();
 const { Pool } = require("pg");
 
-// Initialize PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
+// Function to get embeddings from Python
+const getEmbeddings = (text) => {
+  return new Promise((resolve, reject) => {
+    const pythonProcess = spawn("python3", ["generate_embeddings.py"]);
+    pythonProcess.stdin.write(text);
+    pythonProcess.stdin.end();
+
+    let data = "";
+    pythonProcess.stdout.on("data", (chunk) => {
+      data += chunk.toString();
+    });
+
+    pythonProcess.stderr.on("data", (error) => {
+      console.error("Python Error:", error.toString());
+      reject(error.toString());
+    });
+
+    pythonProcess.on("close", (code) => {
+      if (code === 0) {
+        try {
+          resolve(JSON.parse(data));
+        } catch (error) {
+          reject("Invalid JSON from Python");
+        }
+      } else {
+        reject(`Python process exited with code ${code}`);
+      }
+    });
+  });
+};
+
 // User signup endpoint
 router.post("/", async (req, res) => {
   const { name, age, gender, hobbies } = req.body;
 
+  if (!name || !age || !gender || !hobbies) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
   try {
-    if (!name || !age || !gender || !hobbies) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
+    console.log("Generating Embeddings for:", hobbies);
+    const embedding = await getEmbeddings(hobbies);
 
-    console.log("Received Data:", { name, age, gender, hobbies });
-
-    // Dynamically import fetch (inside the function to ensure it's initialized)
-    console.log("Sending to Hugging Face:", JSON.stringify({ inputs: [hobbies] }));
-
-    const fetch = (await import("node-fetch")).default;
-
-    // Fetch embeddings from Hugging Face API
-    const response = await fetch(
-    "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ inputs: hobbies.split(", ").map(hobby => hobby.trim()) }), // Convert hobbies string into an array
-    }
-  );
-
-
-
-    const data = await response.json();
-    console.log("Hugging Face Response:", JSON.stringify(data, null, 2)); // Log full response
-
-    // Ensure we correctly extract embeddings
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      throw new Error("Embedding data is missing or invalid");
-    }
-
-    const embedding = data[0].embedding || data[0]; // Adjust if structure is different
-    console.log("Extracted Embedding:", embedding);
-
-    // Insert user into PostgreSQL
     const result = await pool.query(
       "INSERT INTO users (name, age, gender, hobbies, embedding) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [name, age, gender, hobbies, embedding]
     );
 
-    console.log("User Inserted:", result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error("Error saving user:", error.message);
-    res.status(500).json({ error: `Error saving user: ${error.message}` });
+    console.error("Error saving user:", error);
+    res.status(500).json({ error: `Error saving user: ${error}` });
   }
 });
 
