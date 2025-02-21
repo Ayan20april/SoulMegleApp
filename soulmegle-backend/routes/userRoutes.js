@@ -16,7 +16,14 @@ router.post("/", async (req, res) => {
   const { name, age, gender, hobbies } = req.body;
 
   try {
-    // Get embeddings
+    // Check if required fields are missing
+    if (!name || !age || !gender || !hobbies) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    console.log("Received Data:", { name, age, gender, hobbies });
+
+    // Get embeddings from OpenAI
     const response = await openai.embeddings.create({
       model: "text-embedding-ada-002",
       input: hobbies,
@@ -29,6 +36,7 @@ router.post("/", async (req, res) => {
     }
 
     const embedding = response.data[0].embedding;
+    console.log("Extracted Embedding:", embedding);
 
     // Insert user into PostgreSQL
     const result = await pool.query(
@@ -36,10 +44,11 @@ router.post("/", async (req, res) => {
       [name, age, gender, hobbies, embedding]
     );
 
+    console.log("User Inserted:", result.rows[0]); // Debugging
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error saving user:", error.message);
-    res.status(500).json({ error: "Error saving user" });
+    res.status(500).json({ error: `Error saving user: ${error.message}` });
   }
 });
 
