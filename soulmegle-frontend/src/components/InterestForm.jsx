@@ -17,16 +17,15 @@ const InterestForm = ({ setUserId }) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/users`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
     });
 
+    console.log("Full Response:", response);
     const data = await response.json();
-    console.log("Server response:", data); // Debugging log
+    console.log("Response Data:", data);
 
-    if (data.id) {
+    if (response.ok) {
       setUserId(data.id);
       alert("User registered successfully!");
       navigate("/video-chat");
@@ -35,9 +34,10 @@ const InterestForm = ({ setUserId }) => {
     }
   } catch (error) {
     console.error("Error saving user:", error);
-    alert("Failed to register. Please check the console for details.");
+    alert("Failed to register. Check console for details.");
   }
 };
+
 
   return (
     <form onSubmit={handleSubmit}>
