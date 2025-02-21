@@ -1,41 +1,49 @@
-// routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
 const { Pool } = require("pg");
-const OpenAI = require("openai");
 
+// Initialize PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // User signup endpoint
 router.post("/", async (req, res) => {
   const { name, age, gender, hobbies } = req.body;
 
   try {
-    // Check if required fields are missing
     if (!name || !age || !gender || !hobbies) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
     console.log("Received Data:", { name, age, gender, hobbies });
 
-    // Get embeddings from OpenAI
-    const response = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: hobbies,
-    });
+    // Dynamically import fetch (inside the function to ensure it's initialized)
+    const fetch = (await import("node-fetch")).default;
 
-    console.log("OpenAI Response:", response); // Debugging
+    // Fetch embeddings from Hugging Face API
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: [hobbies] }),
+      }
+    );
 
-    if (!response.data || !response.data.length) {
-      throw new Error("Embedding data is missing");
+    const data = await response.json();
+    console.log("Hugging Face Response:", JSON.stringify(data, null, 2)); // Log full response
+
+    // Ensure we correctly extract embeddings
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      throw new Error("Embedding data is missing or invalid");
     }
 
-    const embedding = response.data[0].embedding;
+    const embedding = data[0].embedding || data[0]; // Adjust if structure is different
     console.log("Extracted Embedding:", embedding);
 
     // Insert user into PostgreSQL
@@ -44,14 +52,12 @@ router.post("/", async (req, res) => {
       [name, age, gender, hobbies, embedding]
     );
 
-    console.log("User Inserted:", result.rows[0]); // Debugging
+    console.log("User Inserted:", result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error saving user:", error.message);
     res.status(500).json({ error: `Error saving user: ${error.message}` });
   }
 });
-
-// Other user routes can go here
 
 module.exports = router;

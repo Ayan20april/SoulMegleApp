@@ -5,7 +5,7 @@ const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { Pool } = require("pg");
-const OpenAI = require("openai");
+//const OpenAI = require("openai");
 
 //Import your Sequelize connection and user routes
 const sequelize = require('./config/db');
@@ -24,7 +24,7 @@ const pool = new Pool({
 });
 
 // Initialize OpenAI with your API key
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+//const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Root endpoint for testing
 app.get('/', (req, res) => {
