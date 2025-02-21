@@ -11,33 +11,33 @@ const InterestForm = ({ setUserId }) => {
   const navigate = useNavigate(); // Use navigate for redirection
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
-    const userData = { name, age, gender, hobbies };
+  event.preventDefault();
+  const userData = { name, age, gender, hobbies };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
 
-      const data = await response.json();
-      console.log("User added:", data);
+    const data = await response.json();
+    console.log("Server response:", data); // Debugging log
 
-      if (data.id) {
-        setUserId(data.id);
-        alert("User registered successfully!");
-        navigate("/video-chat"); // Redirect to video chat page
-      } else {
-        alert("Failed to register. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error saving user:", error);
-      alert("Failed to register. Please try again.");
+    if (data.id) {
+      setUserId(data.id);
+      alert("User registered successfully!");
+      navigate("/video-chat");
+    } else {
+      alert(`Failed to register: ${data.error || "Unknown error"}`);
     }
-  };
+  } catch (error) {
+    console.error("Error saving user:", error);
+    alert("Failed to register. Please check the console for details.");
+  }
+};
 
   return (
     <form onSubmit={handleSubmit}>
