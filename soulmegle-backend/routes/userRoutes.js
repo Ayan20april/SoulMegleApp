@@ -25,7 +25,6 @@ router.post("/", async (req, res) => {
     const fetch = (await import("node-fetch")).default;
 
     // Fetch embeddings from Hugging Face API
-    // Fetch embeddings from Hugging Face
     const response = await fetch(
     "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
     {
@@ -34,9 +33,10 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ inputs: [hobbies] }), // Fix: Wrap hobbies in an array
+      body: JSON.stringify({ inputs: hobbies.split(", ").map(hobby => hobby.trim()) }), // Convert hobbies string into an array
     }
   );
+
 
 
     const data = await response.json();
